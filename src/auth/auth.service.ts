@@ -39,9 +39,13 @@ export class AuthService {
     };
   }
 
-  async register(user: CreateUserDto): Promise<User> {
+  async register(user: CreateUserDto): Promise<any> {
     const hashpassword = await bcrypt.hash(user.password, 5);
 
-    return this.usersService.create({ ...user, password: hashpassword });
+    this.usersService.create({ ...user, password: hashpassword });
+
+    return {
+      message: 'User created sucsessfuly',
+    };
   }
 }

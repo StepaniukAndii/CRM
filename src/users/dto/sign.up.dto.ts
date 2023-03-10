@@ -8,5 +8,5 @@ export class CreateUserDto {
   password: string;
 
   @IsNotEmpty()
-  secondpassword: string;
+  confirm_password: string;
 }
