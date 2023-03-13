@@ -22,4 +22,8 @@ export class UsersService {
   async create(user: CreateUserDto): Promise<User> {
     return await this.userRepository.save(user);
   }
+
+  async putTokenByUserId(id: number, token: string) {
+    return await this.userRepository.update(id, { jwtToken: token });
+  }
 }

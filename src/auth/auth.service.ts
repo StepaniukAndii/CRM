@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -30,22 +31,33 @@ export class AuthService {
     const findUser = await this.usersService.findOne(user.username);
 
     const payload = {
-      username: findUser.username,
       id: findUser.id,
     };
 
+    const acsess_token = this.jwtService.sign(payload);
+    await this.usersService.putTokenByUserId(findUser.id, acsess_token);
+
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: acsess_token,
     };
   }
 
   async register(user: CreateUserDto): Promise<any> {
-    const hashpassword = await bcrypt.hash(user.password, 5);
+    const findUser = await this.usersService.findOne(user.username);
 
-    this.usersService.create({ ...user, password: hashpassword });
+    if (!findUser) {
+      const hashpassword = await bcrypt.hash(user.password, 5);
+      const userCreated = this.usersService.create({
+        ...user,
+        password: hashpassword,
+      });
 
-    return {
-      message: 'User created sucsessfuly',
-    };
+      if (!this.usersService.findOne((await userCreated).username))
+        return {
+          message: 'User created sucsessfuly',
+        };
+    } else {
+      throw new BadRequestException('User exist');
+    }
   }
 }
