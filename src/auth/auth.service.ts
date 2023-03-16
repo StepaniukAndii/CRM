@@ -1,16 +1,10 @@
-import {
-  BadRequestException,
-  HttpException,
-  HttpStatus,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { UsersService } from '../users/users.service';
-import { User } from '../users/entities/user.entity';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { LoginUserDto } from 'src/users/dto/sign.in.dto';
-import { CreateUserDto } from 'src/users/dto/sign.up.dto';
 import * as bcrypt from 'bcrypt';
+import { CreateUserDto } from 'src/users/dto/sign.up.dto';
+import { LoginUserDto } from 'src/users/dto/sign.in.dto';
+
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AuthService {
@@ -45,19 +39,25 @@ export class AuthService {
   async register(user: CreateUserDto): Promise<any> {
     const findUser = await this.usersService.findOne(user.username);
 
-    if (!findUser) {
-      const hashpassword = await bcrypt.hash(user.password, 5);
-      const userCreated = this.usersService.create({
-        ...user,
-        password: hashpassword,
-      });
-
-      if (!this.usersService.findOne((await userCreated).username))
-        return {
-          message: 'User created sucsessfuly',
-        };
-    } else {
+    if (findUser) {
       throw new BadRequestException('User exist');
+    }
+
+    if (user.password !== user.confirm_password) {
+      throw new BadRequestException('Password not same');
+    }
+
+    const hashpassword = await bcrypt.hash(user.password, 5);
+    const userCreated = await this.usersService.create({
+      ...user,
+      password: hashpassword,
+    });
+    const userAfterCreted = this.usersService.findOne(userCreated.username);
+
+    if (userAfterCreted) {
+      return {
+        message: 'User created sucsessfuly',
+      };
     }
   }
 }

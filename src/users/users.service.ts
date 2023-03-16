@@ -26,4 +26,10 @@ export class UsersService {
   async putTokenByUserId(id: number, token: string) {
     return await this.userRepository.update(id, { jwtToken: token });
   }
+
+  async blockUser(username: string) {
+    const user = await this.findOne(username);
+
+    return await this.userRepository.update(user.id, { isBlocked: true });
+  }
 }

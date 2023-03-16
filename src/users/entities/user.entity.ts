@@ -13,4 +13,7 @@ export class User {
 
   @Column({ nullable: true })
   jwtToken: string;
+
+  @Column({ default: false })
+  isBlocked: boolean;
 }

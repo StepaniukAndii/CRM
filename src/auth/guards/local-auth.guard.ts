@@ -16,6 +16,10 @@ export class LocalAuthGuard implements CanActivate {
     const body = req.body;
     const user = await this.usersService.findOne(body.username);
 
+    if (user.isBlocked) {
+      return false;
+    }
+
     if (!user) {
       throw new UnauthorizedException();
     } else {
