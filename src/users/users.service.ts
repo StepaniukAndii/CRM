@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
-import { CreateUserDto } from './dto/sign.up.dto';
+import { SignUpDto } from './dto/sign.up.dto';
 
 @Injectable()
 export class UsersService {
@@ -19,11 +19,11 @@ export class UsersService {
     return this.userRepository.findOne({ where: { id } });
   }
 
-  async create(user: CreateUserDto): Promise<User> {
-    return await this.userRepository.save(user);
+  async create(user: SignUpDto): Promise<User> {
+    return this.userRepository.save(user);
   }
 
-  async putTokenByUserId(id: number, token: string) {
+  async updateJwtById(id: number, token: string) {
     return await this.userRepository.update(id, { jwtToken: token });
   }
 

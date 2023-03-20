@@ -1,19 +1,20 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { BaseModel } from './base.model.entity';
 
 @Entity()
-export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column()
+export class User extends BaseModel {
+  @Column({ unique: true })
   username: string;
 
   @Column()
   password: string;
 
-  @Column({ nullable: true })
+  @Column({ default: '' })
   jwtToken: string;
 
   @Column({ default: false })
   isBlocked: boolean;
+
+  @Column({ default: false })
+  isVerify: boolean;
 }

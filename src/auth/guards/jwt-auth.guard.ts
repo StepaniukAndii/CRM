@@ -16,22 +16,24 @@ export class JwtAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const tokenHeader = request.headers.authorization?.split(' ')[1];
+    const tokenHeader = request.headers.crmtoken?.split(' ')[1];
+    const tokenQuery = request.query.crmtoken;
+    const token = tokenHeader || tokenQuery;
 
-    if (!tokenHeader) {
+    if (!token) {
       throw new UnauthorizedException();
     }
 
-    const decode = this.jwtService.decode(tokenHeader);
-    request.id = decode['id'];
+    const decode = this.jwtService.decode(token);
+    request.id = decode['userId'];
 
-    const user = await this.userService.findOneById(decode['id']);
+    const user = await this.userService.findOneById(decode['userId']);
 
     if (user.isBlocked) {
       return false;
     }
 
-    if (user.jwtToken === tokenHeader) {
+    if (user.jwtToken === token) {
       return true;
     } else {
       throw new UnauthorizedException();

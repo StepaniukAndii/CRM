@@ -1,25 +1,28 @@
+import { BaseModel } from '../entities/base.model.entity';
 import {
+  IsEmail,
   IsNotEmpty,
   IsString,
-  IsStrongPassword,
+  IsUUID,
   MaxLength,
   MinLength,
 } from 'class-validator';
 
-export class CreateUserDto {
+export class SignUpDto extends BaseModel {
   @IsNotEmpty()
-  @MinLength(4)
-  @MaxLength(40)
   @IsString()
+  @IsEmail()
   username: string;
 
   @IsNotEmpty()
-  @IsStrongPassword()
   @IsString()
+  @MinLength(8)
+  @MaxLength(32)
   password: string;
 
   @IsNotEmpty()
-  @IsStrongPassword()
   @IsString()
+  @MinLength(8)
+  @MaxLength(32)
   confirm_password: string;
 }

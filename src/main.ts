@@ -13,8 +13,9 @@ async function bootstrap() {
     .addTag('crm')
     .build();
   const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
   app.useGlobalPipes(new ValidationPipe());
-  app.useGlobalFilters(new HttpExceptionFilter());
+  // app.useGlobalFilters(new HttpExceptionFilter());
   app.enableCors();
   await app.listen(5000);
 }

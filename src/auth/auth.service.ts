@@ -1,10 +1,17 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { CreateUserDto } from 'src/users/dto/sign.up.dto';
-import { LoginUserDto } from 'src/users/dto/sign.in.dto';
+import { SignUpDto } from 'src/users/dto/sign.up.dto';
+import { SignInDto } from 'src/users/dto/sign.in.dto';
 
 import { UsersService } from '../users/users.service';
+import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -13,51 +20,74 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(username: string, pass: string): Promise<boolean> {
-    const user = await this.usersService.findOne(username);
-    if (!user) {
-      return false;
-    }
-    return bcrypt.compare(pass, user.password);
-  }
-
-  async login(user: LoginUserDto): Promise<any> {
-    const findUser = await this.usersService.findOne(user.username);
-
-    const payload = {
-      id: findUser.id,
-    };
-
-    const acsess_token = this.jwtService.sign(payload);
-    await this.usersService.putTokenByUserId(findUser.id, acsess_token);
+  async login(credentials: SignInDto): Promise<any> {
+    const user = await this.usersService.findOne(credentials.username);
+    await this.validationUser(user, credentials);
+    const token = await this.updateJwt(user);
 
     return {
-      access_token: acsess_token,
+      access_token: token,
     };
   }
 
-  async register(user: CreateUserDto): Promise<any> {
-    const findUser = await this.usersService.findOne(user.username);
-
-    if (findUser) {
-      throw new BadRequestException('User exist');
-    }
-
+  async register(user: SignUpDto): Promise<any> {
     if (user.password !== user.confirm_password) {
-      throw new BadRequestException('Password not same');
+      throw new BadRequestException('Passwords are not the same');
     }
 
     const hashpassword = await bcrypt.hash(user.password, 5);
-    const userCreated = await this.usersService.create({
-      ...user,
-      password: hashpassword,
-    });
-    const userAfterCreted = this.usersService.findOne(userCreated.username);
+    await this.usersService
+      .create({
+        ...user,
+        password: hashpassword,
+      })
+      .catch((e) => {
+        console.log(e.detail);
+        if (/(already exists)/.test(e.detail)) {
+          throw new BadRequestException(
+            'Account with this email already exists.',
+          );
+        }
+      });
 
-    if (userAfterCreted) {
-      return {
-        message: 'User created sucsessfuly',
-      };
+    return {
+      message: 'User registration sucssesffuly',
+    };
+  }
+
+  async updateJwt(user: User) {
+    const payload = {
+      userId: user.id,
+    };
+
+    const acsess_token = this.jwtService.sign(payload);
+    await this.usersService.updateJwtById(user.id, acsess_token);
+    return acsess_token;
+  }
+
+  async validationUser(user: User, credentials: SignInDto) {
+    if (!user) {
+      throw new HttpException(
+        {
+          error: 'User',
+          message: `User not found`,
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    if (!bcrypt.compare(credentials.password, user.password)) {
+      throw new NotFoundException(`User doesn't exists`);
+    }
+
+    if (user.isVerify) {
+      throw new HttpException(
+        {
+          error: 'User',
+          message: `User is not verified`,
+        },
+        HttpStatus.PRECONDITION_FAILED,
+      );
     }
   }
 }
