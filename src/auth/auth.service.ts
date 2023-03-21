@@ -51,7 +51,7 @@ export class AuthService {
       });
 
     return {
-      message: 'User registration sucssesffuly',
+      message: ['User registration sucssesffuly'],
     };
   }
 

@@ -5,6 +5,7 @@ import { HttpExceptionFilter } from './filter/http-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
+  const port = +process.env.APP_PORT || 3000;
   const app = await NestFactory.create(AppModule);
   const config = new DocumentBuilder()
     .setTitle('CRM')
@@ -17,6 +18,6 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   // app.useGlobalFilters(new HttpExceptionFilter());
   app.enableCors();
-  await app.listen(5000);
+  await app.listen(port);
 }
 bootstrap();
